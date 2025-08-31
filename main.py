@@ -36,6 +36,7 @@ class NotificationPayload(BaseModel):
     body: str
     url: str = "/"
 
+@app.get("/")
 def read_root():
     return {"message": os.getenv("MY_VARIABLE")}
 
