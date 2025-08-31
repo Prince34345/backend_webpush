@@ -1,5 +1,5 @@
 import json
-from fastapi import FastAPI, Depends, BackgroundTasks
+from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pywebpush import webpush, WebPushException
@@ -12,7 +12,6 @@ load_dotenv()
 VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY")
 VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY")
 VAPID_EMAIL = os.getenv("VAPID_EMAIL")
-
 app = FastAPI(title="FastAPI WebPush")
 
 # allow React frontend
@@ -42,23 +41,28 @@ def get_public_key():
 
 @app.post("/subscribe")
 def subscribe(sub: SubscriptionIn):
+    print("👉 New subscription:", sub.dict())   
     if not any(s["endpoint"] == sub.endpoint for s in subscriptions):
         subscriptions.append(sub.dict())
+    print("👉 Subscriptions list size:", len(subscriptions)) 
     return {"success": True, "total": len(subscriptions)}
 
 @app.post("/send")
 def send_notification(payload: NotificationPayload, background_tasks: BackgroundTasks):
     for sub in subscriptions:
+        print("👉 Queued notification for:", sub["endpoint"])  # debug
         background_tasks.add_task(push_to_subscriber, sub, payload.dict())
     return {"queued": len(subscriptions)}
 
 def push_to_subscriber(subscription, payload):
     try:
+        print("👉 Sending push to:", subscription["endpoint"])  # debug
         webpush(
             subscription_info=subscription,
             data=json.dumps(payload),
             vapid_private_key=VAPID_PRIVATE_KEY,
             vapid_claims={"sub": VAPID_EMAIL}
         )
+        print("✅ Push sent successfully!")
     except WebPushException as ex:
-        print("Push failed:", repr(ex))
+        print("❌ Push failed:", repr(ex))
