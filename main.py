@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pywebpush import webpush, WebPushException
 from dotenv import load_dotenv
+import uvicorn;
 import json, os
 
 load_dotenv()
@@ -12,6 +13,9 @@ VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY")
 VAPID_EMAIL = os.getenv("VAPID_EMAIL")
 
 app = FastAPI()
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
 
 app.add_middleware(
     CORSMiddleware,
