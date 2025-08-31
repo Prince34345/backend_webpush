@@ -36,6 +36,9 @@ class NotificationPayload(BaseModel):
     body: str
     url: str = "/"
 
+def read_root():
+    return {"message": os.getenv("MY_VARIABLE")}
+
 @app.get("/vapid/public")
 def get_public_key():
     return {"publicKey": VAPID_PUBLIC_KEY}
